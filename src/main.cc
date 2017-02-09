@@ -1,10 +1,14 @@
 #include <iostream>
 using namespace std;
 
+#include "font.hh"
+
 #include <SDL2/SDL.h>
 
 static SDL_Window   *main_window = NULL;
 static SDL_Renderer *rndr = NULL;
+
+Font font;
 
 int main(int argc, char ** argv) { 
   SDL_Event event;
@@ -31,6 +35,8 @@ int main(int argc, char ** argv) {
 
   rndr = SDL_CreateRenderer(main_window, -1, 0);
 
+  font.initialize(rndr, 40, "data/large.ttf");
+
   while(run_app) {
 
     while(SDL_PollEvent(&event)) {
@@ -46,6 +52,7 @@ int main(int argc, char ** argv) {
     SDL_RenderClear(rndr);
 
     //...
+    font.draw(rndr, 10, 10);
     
     SDL_RenderPresent(rndr);
     SDL_Delay(40);
