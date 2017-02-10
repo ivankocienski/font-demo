@@ -2,6 +2,7 @@
 using namespace std;
 
 #include "font.hh"
+#include "font-5x7.hh"
 
 #include <SDL2/SDL.h>
 
@@ -35,6 +36,8 @@ int main(int argc, char ** argv) {
 
   rndr = SDL_CreateRenderer(main_window, -1, 0);
 
+  Font5x7 debug(rndr);
+  
   font.initialize(rndr, 40, "data/large.ttf");
 
   while(run_app) {
@@ -52,7 +55,8 @@ int main(int argc, char ** argv) {
     SDL_RenderClear(rndr);
 
     //...
-    font.draw(rndr, 10, 10);
+    //font.draw(rndr, 10, 10);
+    debug.draw(10, 10, "Hello, World? AaBbCc 123 ()?=~!"); 
     
     SDL_RenderPresent(rndr);
     SDL_Delay(40);

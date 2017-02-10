@@ -26,6 +26,7 @@ pkg_search_module(SDL2 REQUIRED sdl2)
 set (SRC
   src/main.cc
   src/font.cc
+  src/font-5x7.cc
 )
 
 add_executable(font-demo ${SRC})

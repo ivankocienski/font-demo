@@ -47,6 +47,7 @@ public:
   Glyph(FT_Face, int, int);
 
   Image &image();
+  int yoffset();
   
 };
 

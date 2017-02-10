@@ -97,6 +97,10 @@ Image & Glyph::image() {
   return m_image;
 }
 
+int Glyph::yoffset() {
+  return m_yoffset;
+}
+
 /* font renderer */
 
 FontRenderer::FontRenderer() {
@@ -159,7 +163,7 @@ void Font::initialize( SDL_Renderer *out_rndr, int size, const char *path ) {
  
   cout << "max width=" << max_width << "  height=" << max_height << endl;
 
-  Image char_palette(max_width*16, max_height*16);
+  Image char_palette(max_width*16, (max_height+1)*16);
   cout << "char_palette width=" << char_palette.width() << "  height=" << char_palette.height() << endl;
   
   int draw_x = 0;
@@ -168,7 +172,7 @@ void Font::initialize( SDL_Renderer *out_rndr, int size, const char *path ) {
   cout << "blitting " << renderer.glyphs().size() << " glyphs" << endl;
   
   for(auto &glyph : renderer.glyphs()) {
-    char_palette.blit(glyph.image(), draw_x, draw_y);
+    char_palette.blit(glyph.image(), draw_x, draw_y + glyph.yoffset());
 
     draw_x += max_width;
     if(draw_x >= max_width*16) {
