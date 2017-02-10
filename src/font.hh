@@ -46,7 +46,7 @@ private:
   
 public:
   Glyph();
-  Glyph(FT_Face, int, int);
+  Glyph(FT_Face, int);
 
   Image &image();
   int yoffset();

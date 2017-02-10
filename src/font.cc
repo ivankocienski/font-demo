@@ -96,7 +96,7 @@ SDL_Texture * Image::make_texture(SDL_Renderer *rndr) {
 
 Glyph::Glyph() { }
 
-Glyph::Glyph(FT_Face face, int face_size, int char_num) {
+Glyph::Glyph(FT_Face face, int char_num) {
   
   FT_UInt glyph_index = FT_Get_Char_Index( face, char_num );
 
@@ -105,11 +105,12 @@ Glyph::Glyph(FT_Face face, int face_size, int char_num) {
   FT_Render_Glyph( face->glyph, FT_RENDER_MODE_NORMAL );
 
   m_advance = face->glyph->advance.x >> 6;
-
+  m_yoffset = face->glyph->metrics.height >> 6;
+  
   int width  = face->glyph->bitmap.width;
   int height = face->glyph->bitmap.rows;
   
-  m_yoffset = face_size - face->glyph->bitmap_top;
+  //m_yoffset = face_size - some_height; //face->glyph->bitmap_top;
   //m_yoffset = face->glyph->bitmap_top;
 
   m_image.set_pixels(width, height, face->glyph->bitmap.buffer);
@@ -156,10 +157,12 @@ void Font::set_glyphs(vector<Glyph> &glyphs) {
   //    << "  height=" << char_palette.height() << endl;
   
   int draw_x = 0;
-  int draw_y = 0; //-5;
+  int draw_y = 0; //m_char_height; //-5;
 
   for(auto &glyph : glyphs) {
-    char_palette.blit(glyph.image(), draw_x, draw_y + glyph.yoffset());
+    //char_palette.blit(glyph.image(), draw_x, draw_y + glyph.yoffset());
+    int ypos = draw_y + (m_char_height - glyph.yoffset());
+    char_palette.blit(glyph.image(), draw_x, ypos);
 
     draw_x += m_char_width;
     if(draw_x >= m_char_width*16) {
@@ -249,7 +252,7 @@ Font FontRenderer::make_font(int size) {
     std::vector<Glyph> glyphs(256);
   
     for(int i = 0; i < 256; i++)
-      glyphs[i] = Glyph(m_face, size, i);
+      glyphs[i] = Glyph(m_face, i);
 
     new_font.set_glyphs(glyphs);
   }
