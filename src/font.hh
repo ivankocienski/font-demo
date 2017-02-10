@@ -33,6 +33,8 @@ public:
   void blit(Image&, int, int);
 
   std::vector<uint8_t> & pixels();
+
+  SDL_Texture * make_texture(SDL_Renderer*);
 };
 
 class Glyph {
@@ -90,5 +92,6 @@ public:
 
   SDL_Texture* texture();
   void draw(SDL_Renderer*, int, int);
+  void draw_bb(SDL_Renderer*, int, int);
 };
 

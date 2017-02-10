@@ -60,15 +60,51 @@ void Image::set_pixels(int w, int h, uint8_t *source) {
 
 void Image::blit(Image &source, int to_x, int to_y) {
 
-  for(int y = 0; y < source.height(); y++)
+  auto dest_pixels = m_pixels.begin() + (to_y * m_width) + to_x;
+  auto src_pixels = source.pixels().begin();
+  
+  for(int y = 0; y < source.height(); y++) {
     for(int x = 0; x < source.width(); x++) {
 
-      int dst_pos = ((y + to_y) * m_width) + x + to_x;
-      int src_pos = (y * source.width()) + x;
+      *dest_pixels = *src_pixels;
 
-      m_pixels[dst_pos] = source.m_pixels[src_pos];
+      dest_pixels++;
+      src_pixels++;          
     }
+    
+    to_y++;
+    if(to_y >= m_height) return;
+
+    dest_pixels += m_width - source.width();
+  }
 }
+
+SDL_Texture * Image::make_texture(SDL_Renderer *rndr) {
+
+  SDL_Surface *surface = NULL;
+  surface = SDL_CreateRGBSurface(0, m_width, m_height, 32, 0, 0, 0, 0);
+  if(!surface) throw "Could not create surface";
+
+  //cout << "surface width=" << surface->w << "  height=" << surface->h << endl;
+  //cout << "  pixels.size=" << char_palette.pixels().size() << endl;
+  
+  uint8_t *write_pixels = (uint8_t *)surface->pixels;
+  for(auto &src_pixel : m_pixels) {
+    uint8_t value = src_pixel;
+  
+    *write_pixels = value; write_pixels++;
+    *write_pixels = value; write_pixels++;
+    *write_pixels = value; write_pixels++;
+    *write_pixels = value; write_pixels++;
+  }
+
+  SDL_Texture *texture = SDL_CreateTextureFromSurface(rndr, surface);
+  
+  SDL_FreeSurface(surface);
+
+  return texture;
+}
+
 
 /* glyph */
 
@@ -181,28 +217,9 @@ void Font::initialize( SDL_Renderer *out_rndr, int size, const char *path ) {
     }
   }
 
-  SDL_Surface *surface = NULL;
-  surface = SDL_CreateRGBSurface(0, char_palette.width(), char_palette.height(), 32, 0, 0, 0, 0);
-  if(!surface) throw "Could not create surface";
-
-  cout << "surface width=" << surface->w << "  height=" << surface->h << endl;
-  cout << "  pixels.size=" << char_palette.pixels().size() << endl;
-  
-  uint8_t *write_pixels = (uint8_t *)surface->pixels;
-  for(auto &src_pixel : char_palette.pixels()) {
-    uint8_t value = src_pixel;
-  
-    *write_pixels = value; write_pixels++;
-    *write_pixels = value; write_pixels++;
-    *write_pixels = value; write_pixels++;
-    *write_pixels = value; write_pixels++;
-  }
-
-  m_texture = SDL_CreateTextureFromSurface(out_rndr, surface);
+  m_texture = char_palette.make_texture(out_rndr);
   m_texture_width = char_palette.width();
-  m_texture_height = char_palette.height();
-  
-  SDL_FreeSurface(surface);
+  m_texture_height = char_palette.height();  
 }
 
 void Font::draw( int x, int y, const char *text ) {
@@ -218,5 +235,13 @@ void Font::draw(SDL_Renderer *rndr, int x, int y) {
   SDL_Rect dst = { x, y, m_texture_width, m_texture_height };
 
   SDL_RenderCopy(rndr, m_texture, NULL, &dst);
+}
+
+void Font::draw_bb(SDL_Renderer *rndr, int x, int y) {
+  
+  SDL_Rect dst = { x, y, m_texture_width+1, m_texture_height+1 };
+  SDL_SetRenderDrawColor(rndr, 255, 0, 255, 255);
+  
+  SDL_RenderDrawRect(rndr, &dst);
 }
 

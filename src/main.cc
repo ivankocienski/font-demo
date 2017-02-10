@@ -28,7 +28,7 @@ int main(int argc, char ** argv) {
       SDL_WINDOWPOS_CENTERED,
       800,
       600,
-      SDL_WINDOW_SHOWN);
+      SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
   if(!main_window) {
     fprintf(stderr, "error: failed to create main window\n");
     return -1;
@@ -55,8 +55,10 @@ int main(int argc, char ** argv) {
     SDL_RenderClear(rndr);
 
     //...
-    //font.draw(rndr, 10, 10);
-    debug.draw(10, 10, "Hello, World? AaBbCc 123 ()?=~!"); 
+    font.draw(rndr, 1, 1);
+    font.draw_bb(rndr, 0, 0);
+    
+    //debug.draw(10, 10, "Hello, World? AaBbCc 123 ()?=~!"); 
     
     SDL_RenderPresent(rndr);
     SDL_Delay(40);
