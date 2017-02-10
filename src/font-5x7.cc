@@ -2,6 +2,8 @@
 #include "font-5x7.hh"
 #include "font-5x7-bits.hh"
 
+#include <cstdarg>
+
 Font5x7::Font5x7() {
   m_texture = NULL;
 }
@@ -71,4 +73,17 @@ void Font5x7::draw(int x, int y, char *str) {
     str++;
     dst.x += 6;
   }
+}
+
+static char buffer[2048];
+
+void Font5x7::drawf(int x, int y, char *format, ...) {
+
+  va_list args;
+  
+  va_start(args, format);
+  vsnprintf(buffer, 2048, format, args);
+  va_end(args);
+
+  draw(x, y, buffer);
 }

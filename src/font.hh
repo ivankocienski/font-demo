@@ -7,8 +7,8 @@
 
 #include <vector>
 #include <cstdint>
+#include <string>
 
-/* NOTE: at the moment only ONE font is handled. boo! */
 
 class Image {
 private:
@@ -53,45 +53,55 @@ public:
   
 };
 
+class Font {
+private:
+
+  SDL_Renderer *m_renderer;
+  SDL_Texture *m_texture;
+  int m_texture_width;
+  int m_texture_height;
+  int m_char_width;
+  int m_char_height;
+  
+public:
+  
+  Font();
+  Font(SDL_Renderer*);
+
+  bool is_rendered();
+  void set_glyphs(std::vector<Glyph> &);
+  
+  //void initialize( SDL_Renderer*, int, const char* );
+  void draw( int, int, const std::string& );
+  void draw( int, int, const char* );
+
+  void draw(int, int);
+  void draw_bb(int, int);
+
+  int char_width();
+  int char_height();
+  int pal_width();
+  int pal_height();
+  //char *font_name();
+};
+
+
 class FontRenderer {
 private:
 
+  SDL_Renderer *m_renderer;
   FT_Library m_library;
   FT_Face m_face;
-
-  int m_size;
-
-  std::vector<Glyph> m_glyphs;
 
 public:
 
   FontRenderer();
-  FontRenderer( int, const char* );
+  FontRenderer( SDL_Renderer*, const char* );
 
   void render();
   void max_size(int&, int&);
 
   std::vector<Glyph> &glyphs();
+
+  Font make_font(int);
 };
-
-class Font {
-private:
-
-  FontRenderer m_renderer;
-
-  SDL_Texture *m_texture;
-  int m_texture_width;
-  int m_texture_height;
-  
-public:
-  
-  Font();
-
-  void initialize( SDL_Renderer*, int, const char* );
-  void draw( int, int, const char* );
-
-  SDL_Texture* texture();
-  void draw(SDL_Renderer*, int, int);
-  void draw_bb(SDL_Renderer*, int, int);
-};
-

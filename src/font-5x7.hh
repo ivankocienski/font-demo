@@ -19,4 +19,5 @@ public:
   SDL_Texture *texture();
 
   void draw(int, int, char*);
+  void drawf(int, int, char*, ...);
 };
