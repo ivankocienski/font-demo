@@ -16,7 +16,7 @@ the fly.
 
     mkdir font-demo
     
-    git clone <bla> ~/font-demo/repo
+    git clone git@github.com:ivankocienski/font-demo.git ~/font-demo/repo
 
     cd ~/font-demo
 
