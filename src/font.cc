@@ -110,9 +110,6 @@ Glyph::Glyph(FT_Face face, int char_num) {
   int width  = face->glyph->bitmap.width;
   int height = face->glyph->bitmap.rows;
   
-  //m_yoffset = face_size - some_height; //face->glyph->bitmap_top;
-  //m_yoffset = face->glyph->bitmap_top;
-
   m_image.set_pixels(width, height, face->glyph->bitmap.buffer);
 }
 
@@ -122,6 +119,10 @@ Image & Glyph::image() {
 
 int Glyph::yoffset() {
   return m_yoffset;
+}
+
+int Glyph::advance() {
+  return m_advance;
 }
 
 /* font API */
@@ -159,11 +160,17 @@ void Font::set_glyphs(vector<Glyph> &glyphs) {
   int draw_x = 0;
   int draw_y = 0; //m_char_height; //-5;
 
+  m_char_advance.resize(256);
+  auto advance = m_char_advance.begin();
+  
   for(auto &glyph : glyphs) {
     //char_palette.blit(glyph.image(), draw_x, draw_y + glyph.yoffset());
     int ypos = draw_y + (m_char_height - glyph.yoffset());
     char_palette.blit(glyph.image(), draw_x, ypos);
 
+    *advance = glyph.advance();
+    advance++;
+    
     draw_x += m_char_width;
     if(draw_x >= m_char_width*16) {
       draw_x = 0;
@@ -183,9 +190,11 @@ void Font::draw( int x, int y, const std::string &str ) {
 
 void Font::draw( int x, int y, const char *text ) {
 
-  SDL_Rect dst = { x, y, m_char_width, m_char_height };
+  SDL_Rect dst = { x+1, y+1, m_char_width, m_char_height };
   SDL_Rect src = { 0, 0, m_char_width, m_char_height };
 
+  int width = 0;
+  
   while(*text) {
 
     src.x = (*text & 15) * m_char_width;
@@ -193,9 +202,19 @@ void Font::draw( int x, int y, const char *text ) {
     
     SDL_RenderCopy(m_renderer, m_texture, &src, &dst);
 
-    dst.x += m_char_width;
+    //dst.x += m_char_width;
+    width += m_char_advance[*text];
+    dst.x += m_char_advance[*text];
     text++;
   }
+
+  dst.x = x;
+  dst.y = y;
+  dst.w = width+2;
+  dst.h = m_char_height+2;
+
+  SDL_SetRenderDrawColor(m_renderer, 255, 0, 255, 255);
+  SDL_RenderDrawRect(m_renderer, &dst);
 }
 
 void Font::draw(int x, int y) {

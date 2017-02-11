@@ -2,6 +2,7 @@
 #include <vector>
 #include <list>
 #include <fstream>
+#include <cstring>
 
 using namespace std;
 
@@ -10,19 +11,32 @@ using namespace std;
 
 #include <SDL2/SDL.h>
 
+// SDL
 static SDL_Window   *main_window = NULL;
 static SDL_Renderer *rndr = NULL;
 
-static const int font_size = 40;
-static const char *font_path = "data/large.ttf";
+// state
+static vector<string> text_strings;
 
-vector<string> text_strings;
+// config from argv
+static int start_size = 40;
+static string font_path;
+static string strings_path;
 
-void load_strings() {
 
+static void load_strings() {
+
+  if(strings_path.empty()) {
+    text_strings.resize(3);
+    text_strings[0] = "AaBbCc123[]()*~?";
+    text_strings[1] = "Hello, World";
+    text_strings[2] = "The quick fox jumped over the lazy dog";
+    return;
+  }
+  
   fstream file;
 
-  file.open("data/strings.txt", ios_base::in);
+  file.open(strings_path, ios_base::in);
 
   if(file.is_open()) {
 
@@ -52,7 +66,7 @@ static void draw_char_palette(Font5x7 &debug, Font &font, int font_size) {
   debug.drawf(xpos, ypos, "Font size: %d", font_size);
   ypos += 10;
     
-  debug.drawf(xpos, ypos, "Font path: %s", font_path);
+  debug.drawf(xpos, ypos, "Font path: %s", font_path.c_str());
   ypos += 10;
     
   debug.drawf(xpos, ypos, "Palette width  : %d", font.pal_width());
@@ -74,8 +88,8 @@ static void draw_strings(Font5x7 &debug, Font &font, int font_size) {
   int xpos = 10;
   int ypos = 10;
   
-  debug.drawf(xpos, ypos, "Font size=%d  path=%s", font_size, font_path);
-  ypos += 10;
+  debug.drawf(xpos, ypos, "Font size=%d  path=%s", font_size, font_path.c_str());
+  ypos += 20;
     
   for(auto & str : text_strings) {
     font.draw(xpos, ypos, str);
@@ -84,14 +98,101 @@ static void draw_strings(Font5x7 &debug, Font &font, int font_size) {
   }
 }
 
-int main(int argc, char ** argv) { 
-  SDL_Event event;
-  int ret;
+static void print_help() {
 
-  vector<Font> fonts(100);
-  int current_font = font_size;
+  cout << "help" << endl
+       << "  font-demo [--strings PATH] [--size SIZE] [-h] TTF_PATH" << endl
+       << "    --strings PATH   path to use for loading specific strings" << endl
+       << "    --size SIZE  use SIZE as a starting size. Must be between 10-90 integer" << endl
+       << "    -h show this help" << endl
+       << endl
+       << endl;
+
+  // TODO: basic usage here
+}
+
+static void process_args(int argc, char ** argv) {
+
+  while(true) {
+    argc--;
+    argv++;
+
+    if(!argc) break;
+    
+    if(!strcmp(*argv, "-h")) {
+      print_help();
+      exit(0);
+    }
+
+    if(!strcmp(*argv, "--strings")) {
+      if(!argc) {
+	cerr << "error: missing argument" << endl;
+	print_help();
+	exit(-1);
+      }
+
+      argc--;
+      argv++;
+
+      if(**argv == '-') {
+	cerr << "error: bad argument" << endl;
+	print_help();
+	exit(-1);
+      }
+      
+      strings_path = *argv;
+      continue;
+    }
+
+    if(!strcmp(*argv, "--size")) {
+      if(!argc) {
+	cerr << "error: missing argument" << endl;
+	print_help();
+	exit(-1);
+      }
+
+      argc--;
+      argv++;
+      
+      if(**argv == '-') {
+	cerr << "error: bad argument" << endl;
+	print_help();
+	exit(-1);
+      }
+
+      start_size = atoi(*argv);
+      continue;
+    }
+
+    font_path = *argv;
+    break;
+  }
+
+  cout << "strings_path=" << strings_path << endl;
+  cout << "start_size=" << start_size << endl;
+  cout << "font_path=" << font_path << endl;
+
+  if(strings_path.empty()) {
+    cout << "[no strings defined, using defaults]" << endl;
+  }
+
+  if(start_size < 10 || start_size > 90) {
+    cerr << "error: start_size (" << start_size << ") out of range, must be between 20-90" << endl;
+    exit(-1);
+  }
+
+  if(font_path.empty()) {
+    cerr << "error: missing font file to load" << endl;
+    print_help();
+    exit(-1);
+  }
+}
+
+int main(int argc, char ** argv) { 
+
+  process_args(argc, argv);
   
-  ret = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+  int ret = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
   if(ret == -1) {
     fprintf(stderr, "error: failed to init SDL!\n");
     return -1;
@@ -111,8 +212,11 @@ int main(int argc, char ** argv) {
 
   rndr = SDL_CreateRenderer(main_window, -1, 0);
 
-  FontRenderer renderer(rndr, font_path);
-  fonts[current_font] = renderer.make_font(font_size);
+  vector<Font> fonts(100);
+  int current_font = start_size;
+
+  FontRenderer renderer(rndr, font_path.c_str());
+  fonts[current_font] = renderer.make_font(current_font);
 
   load_strings();
   
@@ -126,6 +230,8 @@ int main(int argc, char ** argv) {
   while(run_app) {
     
     SDL_Delay(40);
+
+    SDL_Event event;
 
     while(SDL_PollEvent(&event)) {
 
@@ -153,7 +259,7 @@ int main(int argc, char ** argv) {
 	  break;
 	  
 	case SDLK_PAGEUP:
-	  if(current_font > 0) {
+	  if(current_font > 10) {
 	    current_font--;
 	    if(!fonts[current_font].is_rendered())
 	      fonts[current_font] = renderer.make_font(current_font);
@@ -162,7 +268,7 @@ int main(int argc, char ** argv) {
 	  break;
 	
 	case SDLK_PAGEDOWN:
-	  if(current_font < 99) {
+	  if(current_font < 90) {
 	    current_font++;
 	    if(!fonts[current_font].is_rendered())
 	      fonts[current_font] = renderer.make_font(current_font);

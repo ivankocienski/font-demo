@@ -50,7 +50,7 @@ public:
 
   Image &image();
   int yoffset();
-  
+  int advance();  
 };
 
 class Font {
@@ -62,6 +62,8 @@ private:
   int m_texture_height;
   int m_char_width;
   int m_char_height;
+
+  std::vector<int> m_char_advance;
   
 public:
   
